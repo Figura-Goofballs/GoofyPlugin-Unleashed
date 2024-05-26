@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.thekillerbunny.goofyplugin.Enums.GuiElement;
+import com.thekillerbunny.goofyplugin.lua.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +84,7 @@ public class GoofyPlugin implements FiguraAPI {
 
     public static final Class<?>[] GOOFY_PLUGIN_CLASSES = new Class[] {
             GoofyPlugin.class,
+	    LuaArray.class,
     };
 
 }

@@ -135,6 +135,11 @@ public class GoofyAPI {
     }
 
     @LuaWhitelist
+    public LuaArray mkarray() {
+        return new LuaArray();
+    }
+
+    @LuaWhitelist
     @LuaMethodDoc(
         overloads = {
             @LuaMethodOverload(

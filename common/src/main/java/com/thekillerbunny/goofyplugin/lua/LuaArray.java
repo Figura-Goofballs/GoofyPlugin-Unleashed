@@ -2,10 +2,10 @@ package com.thekillerbunny.goofyplugin.lua;
 import java.util.ArrayList;
 import org.luaj.vm2.*;
 import org.figuramc.figura.lua.*;
-import org.figuramc.figura.lua.api.data.FiguraBuffer;
 
-class LuaArray {
-	public ArrayList<LuaValue> values;
+@LuaWhitelist
+public class LuaArray {
+	public final ArrayList<LuaValue> values = new ArrayList<>();
 	@LuaWhitelist
 	public int n;
 	@LuaWhitelist
@@ -13,7 +13,7 @@ class LuaArray {
 		return get(n++);
 	}
 	@LuaWhitelist
-	public LuaArray write(Varargs val) {
+	public LuaArray write(LuaValue... val) {
 		return set(n++, val);
 	}
 	@LuaWhitelist
@@ -50,10 +50,14 @@ class LuaArray {
 		};
 	}
 	@LuaWhitelist
-	public LuaArray set(int n, Varargs val) {
-		for (int j = 1; j <= val.narg(); n++, j++) {
-			if (n >= values.size()) break;
-			values.set(n + j - 1, val.arg(j));
+	public LuaArray set(int n, LuaValue... val) {
+		for (int j = 0; j <= val.length; n++, j++) {
+			if (n > values.size()) throw new LuaError("Out-of-bounds write to index %d of array[%d]".formatted(n, values.size()));
+			// automatically expand if writing just one out
+			if (n == values.size())
+				values.add(val[j]);
+			else
+				values.set(n, val[j]);
 		}
 		return this;
 	}
