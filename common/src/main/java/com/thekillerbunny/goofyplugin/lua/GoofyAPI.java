@@ -396,10 +396,8 @@ public class GoofyAPI {
         return;
       }
       
-      if (player.hasPermissions(2) || this.mc.isLocalServer()) {
-        FiguraVec3 velocity = LuaUtils.parseVec3("setVelocity", x, y, z);
-        player.setDeltaMovement(velocity.asVec3());
-      }
+      FiguraVec3 velocity = LuaUtils.parseVec3("setVelocity", x, y, z);
+      player.setDeltaMovement(velocity.asVec3());
     }
 
     @LuaWhitelist
@@ -427,10 +425,8 @@ public class GoofyAPI {
         return;
       }
       
-      if (player.hasPermissions(2) || this.mc.isLocalServer()) {
-        FiguraVec3 pos = LuaUtils.parseVec3("setPos", x, y, z);
-        player.setPos(pos.asVec3());
-      }
+      FiguraVec3 pos = LuaUtils.parseVec3("setPos", x, y, z);
+      player.setPos(pos.asVec3());
     }
     
     @LuaWhitelist
@@ -459,11 +455,9 @@ public class GoofyAPI {
         return;
       }
       
-      if (player.hasPermissions(2) || this.mc.isLocalServer()) {
-        FiguraVec2 rot = LuaUtils.parseVec2("setRot", x, y);
-        player.setXRot((float) rot.x);
-        player.setYRot((float) rot.y);
-      }
+      FiguraVec2 rot = LuaUtils.parseVec2("setRot", x, y);
+      player.setXRot((float) rot.x);
+      player.setYRot((float) rot.y);
     }
 
     @LuaWhitelist
@@ -488,9 +482,7 @@ public class GoofyAPI {
         return;
       }
       
-      if (player.hasPermissions(2) || this.mc.isLocalServer()) {
-        player.setYBodyRot((float) rot);
-      }
+      player.setYBodyRot((float) rot);
     }
 
     @Override
