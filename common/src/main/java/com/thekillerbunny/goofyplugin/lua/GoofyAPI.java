@@ -1,5 +1,14 @@
 package com.thekillerbunny.goofyplugin.lua;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.UnixDomainSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,6 +16,8 @@ import java.util.regex.Pattern;
 import java.nio.file.Path;
 
 import com.thekillerbunny.goofyplugin.Feature;
+import io.netty.channel.unix.FileDescriptor;
+import io.netty.channel.unix.Socket;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.Minecraft;
 
@@ -23,6 +34,8 @@ import org.figuramc.figura.config.Configs;
 import org.figuramc.figura.lua.FiguraLuaRuntime;
 import org.figuramc.figura.lua.LuaNotNil;
 import org.figuramc.figura.lua.LuaWhitelist;
+import org.figuramc.figura.lua.api.data.FiguraInputStream;
+import org.figuramc.figura.lua.api.data.FiguraOutputStream;
 import org.figuramc.figura.lua.api.nameplate.NameplateAPI;
 import org.figuramc.figura.lua.docs.LuaMethodDoc;
 import org.figuramc.figura.lua.docs.LuaMethodOverload;
@@ -39,6 +52,7 @@ import com.google.gson.Gson;
 
 import org.apache.commons.lang3.ObjectUtils;
 
+import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -331,6 +345,66 @@ public class GoofyAPI {
       Component cList = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(list), uuid, true))));
 
       return new Object[] { cChat, cEntity, cList };
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc("goofy.bind")
+    public Object[] bind(String path) {
+        try {
+            UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(path);
+            @SuppressWarnings("resource") SocketChannel chan = SocketChannel.open(addr);
+            return new Object[] {
+                    new FiguraOutputStream(new OutputStream() {
+                        @Override
+                        public void write(int b) throws IOException {
+                            write(new byte[] {(byte) (b & 255)});
+                        }
+
+                        @Override
+                        public void write(byte @NotNull [] b) throws IOException {
+                            chan.write(ByteBuffer.wrap(b));
+                        }
+
+                        @Override
+                        public void write(byte @NotNull [] b, int off, int len) throws IOException {
+                            chan.write(ByteBuffer.wrap(b, off, len));
+                        }
+
+                        @Override
+                        public void close() throws IOException {
+                            chan.close();
+                        }
+                    }),
+                    new FiguraInputStream(new InputStream() {
+                        @Override
+                        public int read() throws IOException {
+                            byte r[] = new byte[1];
+                            if (read(r) == 0) {
+                                return -1;
+                            } else {
+                                return r[0] & 0xFF;
+                            }
+                        }
+
+                        @Override
+                        public int read(byte @NotNull [] b) throws IOException {
+                            return chan.read(ByteBuffer.wrap(b));
+                        }
+
+                        @Override
+                        public int read(byte @NotNull [] b, int off, int len) throws IOException {
+                            return chan.read(ByteBuffer.wrap(b, off, len));
+                        }
+
+                        @Override
+                        public void close() throws IOException {
+                            chan.close();
+                        }
+                    }),
+            };
+        } catch (IOException e) {
+            throw new LuaError(e);
+        }
     }
 
     @LuaWhitelist

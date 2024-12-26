@@ -1,15 +1,24 @@
 package com.thekillerbunny.goofyplugin;
 
 import com.thekillerbunny.goofyplugin.lua.BackendAPI;
+import io.netty.channel.unix.FileDescriptor;
+import io.netty.channel.unix.Socket;
 import org.figuramc.figura.avatar.Avatar;
 import org.figuramc.figura.entries.FiguraAPI;
 import org.figuramc.figura.entries.annotations.FiguraAPIPlugin;
 import org.figuramc.figura.lua.LuaWhitelist;
+import org.figuramc.figura.lua.api.FileAPI;
+import org.figuramc.figura.lua.api.data.FiguraInputStream;
+import org.luaj.vm2.LuaError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.thekillerbunny.goofyplugin.Enums.GuiElement;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
