@@ -1,16 +1,17 @@
 package com.thekillerbunny.goofyplugin.lua;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import java.nio.file.Path;
 
+import com.thekillerbunny.goofyplugin.GoofyPlugin;
+import com.thekillerbunny.goofyplugin.Feature;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.Minecraft;
 
+import org.apache.commons.lang3.Range;
 import org.figuramc.figura.FiguraMod;
 import org.figuramc.figura.avatar.Avatar;
 import org.figuramc.figura.avatar.Badges;
@@ -23,6 +24,7 @@ import org.figuramc.figura.config.Configs;
 import org.figuramc.figura.lua.FiguraLuaRuntime;
 import org.figuramc.figura.lua.LuaNotNil;
 import org.figuramc.figura.lua.LuaWhitelist;
+import org.figuramc.figura.lua.api.event.LuaEvent;
 import org.figuramc.figura.lua.api.nameplate.NameplateAPI;
 import org.figuramc.figura.lua.docs.LuaMethodDoc;
 import org.figuramc.figura.lua.docs.LuaMethodOverload;
@@ -42,6 +44,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import com.thekillerbunny.goofyplugin.Enums;
@@ -301,8 +304,35 @@ public class GoofyAPI {
     }
 
     @LuaWhitelist
-    public String[] getAvatarNameplate(@LuaNotNil String avatarUUID) {
-      throw new LuaError("getAvatarNameplate is unavailable on 1.21");
+    @LuaMethodDoc(
+      overloads = {
+        @LuaMethodOverload(
+          argumentTypes = { String.class },
+          argumentNames = { "avatarUUID" }
+        )
+      },
+      value = "goofy.get_avatar_nameplate"
+    )
+    public Object[] getAvatarNameplate(@LuaNotNil String avatarUUID) {
+      UUID uuid = UUID.fromString(avatarUUID);
+      Avatar avatar = AvatarManager.getLoadedAvatar(uuid);
+
+      if (avatar == null) {
+        return new Object[]{avatarUUID, avatarUUID, avatarUUID};
+      }
+
+      NameplateAPI plate = avatar.luaRuntime.nameplate;
+
+      String name = avatar.entityName;
+      String chat = ObjectUtils.firstNonNull(plate.CHAT.getText(), name, avatarUUID);
+      String entity = ObjectUtils.firstNonNull(plate.ENTITY.getText(), name, avatarUUID);
+      String list = ObjectUtils.firstNonNull(plate.LIST.getText(), name, avatarUUID);
+
+      Component cChat = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(chat), uuid, true))));
+      Component cEntity = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(entity), uuid, true))));
+      Component cList = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(list), uuid, true))));
+
+      return new Object[] { cChat, cEntity, cList };
     }
 
     @LuaWhitelist
@@ -325,6 +355,28 @@ public class GoofyAPI {
             return null;
         }
         return avatar.color;
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc("goofy.check_features")
+    public void checkFeatures(LuaTable features) {
+        Varargs v = LuaValue.NIL;
+        while (!(v = features.next(v.arg1())).isnil(1)) {
+            String n = v.checkjstring(1);
+            int l = v.checkint(2);
+            Feature f;
+            try {
+                f = Feature.valueOf(n.toUpperCase());
+            } catch (Throwable t) {
+                throw new LuaError("GoofyPlugin feature '%s' not supported".formatted(n));
+            }
+            if (f.current() < l) {
+                throw new LuaError("This avatar uses version %d of GoofyPlugin feature %s, which is more recent than your currently-installed version %d".formatted(l, n, f.current()));
+            }
+            if (f.compatible() > l) {
+                throw new LuaError("This avatar uses version %d of GoofyPlugin feature %s, which is incompatible with your currently-installed version %d (must be at most %d)".formatted(l, n, f.current(), f.compatible()));
+            }
+        }
     }
 
     @LuaWhitelist
