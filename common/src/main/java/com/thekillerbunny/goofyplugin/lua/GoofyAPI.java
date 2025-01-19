@@ -23,6 +23,7 @@ import org.figuramc.figura.config.Configs;
 import org.figuramc.figura.lua.FiguraLuaRuntime;
 import org.figuramc.figura.lua.LuaNotNil;
 import org.figuramc.figura.lua.LuaWhitelist;
+import org.figuramc.figura.lua.api.event.LuaEvent;
 import org.figuramc.figura.lua.api.nameplate.NameplateAPI;
 import org.figuramc.figura.lua.docs.LuaMethodDoc;
 import org.figuramc.figura.lua.docs.LuaMethodOverload;
@@ -311,12 +312,12 @@ public class GoofyAPI {
       },
       value = "goofy.get_avatar_nameplate"
     )
-    public String[] getAvatarNameplate(@LuaNotNil String avatarUUID) {
+    public Object[] getAvatarNameplate(@LuaNotNil String avatarUUID) {
       UUID uuid = UUID.fromString(avatarUUID);
       Avatar avatar = AvatarManager.getLoadedAvatar(uuid);
 
       if (avatar == null) {
-        return new String[]{avatarUUID, avatarUUID, avatarUUID};
+        return new Object[]{avatarUUID, avatarUUID, avatarUUID};
       }
 
       NameplateAPI plate = avatar.luaRuntime.nameplate;
@@ -330,7 +331,7 @@ public class GoofyAPI {
       Component cEntity = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(entity), uuid, true))));
       Component cList = Emojis.removeBlacklistedEmojis(Emojis.applyEmojis(Badges.noBadges4U(Badges.appendBadges(TextUtils.tryParseJson(list), uuid, true))));
 
-      return new String[]{Component.Serializer.toJson(cChat), Component.Serializer.toJson(cEntity), Component.Serializer.toJson(cList)};
+      return new Object[] { cChat, cEntity, cList };
     }
 
     @LuaWhitelist
