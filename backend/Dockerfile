@@ -1,20 +1,18 @@
-FROM alpine AS rustup
-RUN apk add clang
-ADD https://sh.rustup.rs rustup.sh
-RUN chown 1000 rustup.sh
-RUN . rustup.sh -y --target x86_64-unknown-linux-musl
+FROM nixos/nix
+MAINTAINER PoolloverNathan
+COPY <<EOT /etc/nix/nix.conf
+sandbox = true
+build-users-group = nixbld
+extra-experimental-features = nix-command flakes
+extra-substituters = https://cache.pool.net.eu.org
+extra-trusted-public-keys = cache.pool.net.eu.org:7tDwL5h6E8zCvdjIb3gDf7ScjLTKjOnLvsbqQJa9TM8=
+builders = ssh://nathanlaptopv.axolotl-snake.ts.net?base64-ssh-public-host-key=AAAAC3NzaC1lZDI1NTE5AAAAILEMN/0ksFxAEQlwRmTc6+kb1+S4Su7W3JljT+rcIiIV
+EOT
+COPY . src
+RUN --network=host ["/root/.nix-profile/bin/nix", "build", "-vvv", "./src", "--accept-flake-config", "--log-format", "raw"]
+RUN --network=none ["/root/.nix-profile/bin/cp", "result/bin/backend", "/"]
 
-FROM rustup AS files
-WORKDIR /build
-ADD . .
-
-FROM files AS build
-ENV RUSTFLAGS="-C target-feature=+crt-static"
-RUN /root/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl
-
-FROM build AS build-doc
-RUN cargo doc
-
-FROM alpine
-COPY --from=build /build/target/x86_64-unknown-linux-musl/release/backend /exe
-ENTRYPOINT ["/exe"]
+FROM scratch
+MAINTAINER PoolloverNathan
+COPY --from=0 /backend /backend
+ENTRYPOINT ["/backend"]
