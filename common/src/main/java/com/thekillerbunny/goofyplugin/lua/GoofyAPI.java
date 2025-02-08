@@ -497,7 +497,7 @@ public class GoofyAPI {
     }
 
     public void runIfMovementEnabled(Consumer<LocalPlayer> callback) {
-        callback.accept(player);
+        callback.accept(mc.player);
     }
 
     @LuaWhitelist
