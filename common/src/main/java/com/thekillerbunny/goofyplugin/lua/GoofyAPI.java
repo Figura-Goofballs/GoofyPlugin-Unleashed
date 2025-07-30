@@ -507,7 +507,7 @@ public class GoofyAPI {
     }
 
     public void runIfMovementEnabled(Consumer<LocalPlayer> callback) {
-        if (FiguraMod.isLocal(owner.owner) && ((Object) mc.player) instanceof LocalPlayer player {
+        if ((FiguraMod.isLocal(owner.owner) && ((Object) mc.player) instanceof LocalPlayer player) {
 		callback.accept(mc.player);
 	}
     }
